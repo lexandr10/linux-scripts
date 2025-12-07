@@ -1,0 +1,66 @@
+# Default values for django-app
+replicaCount: 2
+
+image:
+  repository: ""  # Буде заповнено URL з ECR після завантаження образу
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  enabled: true
+  type: LoadBalancer
+  port: 8000
+
+ingress:
+  enabled: false
+  className: "nginx"
+  host: "yourdomain.com"
+  path: "/"
+  pathType: Prefix
+  tls: false
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+# ConfigMap для змінних середовища
+configMap:
+  env:
+    DJANGO_SETTINGS_MODULE: "myproject.settings"
+    PYTHONUNBUFFERED: "1"
+    # Додайте інші змінні середовища з теми 4
+    # DEBUG: "False"
+    # SECRET_KEY: "your-secret-key"
+    # DATABASE_URL: "postgresql://user:pass@host:5432/dbname"
+    # ALLOWED_HOSTS: "yourdomain.com,*.yourdomain.com"
+
+# Додаткові змінні середовища (якщо потрібно)
+env: {}
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+livenessProbe:
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
