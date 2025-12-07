@@ -1,0 +1,62 @@
+controller:
+  componentName: "jenkins-controller"
+  numExecutors: 2
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+  
+  serviceType: LoadBalancer
+  serviceAnnotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+  
+  installPlugins:
+    - kubernetes:latest
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+    - docker-workflow:latest
+    - blueocean:latest
+    - pipeline-stage-view:latest
+    - credentials-binding:latest
+    - aws-credentials:latest
+    - amazon-ecr:latest
+  
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: "Welcome to Jenkins configured as code!"
+  
+  additionalAgents:
+    - name: "kaniko"
+      image: "gcr.io/kaniko-project/executor:latest"
+      privileged: true
+      command: "cat"
+      args: ""
+      TTYEnabled: true
+      resourceRequestCpu: "500m"
+      resourceRequestMemory: "1Gi"
+      resourceLimitCpu: "2000m"
+      resourceLimitMemory: "2Gi"
+      envVars:
+        - envVar:
+            key: "DOCKER_CONFIG"
+            value: "/kaniko/.docker"
+  
+  sidecars:
+    configAutoReload:
+      enabled: true
+
+agent:
+  enabled: false
+
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClass: "gp3"
+

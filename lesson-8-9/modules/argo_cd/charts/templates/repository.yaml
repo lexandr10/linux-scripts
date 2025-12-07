@@ -1,0 +1,31 @@
+{{- range .Values.repositories }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Values.namespace | default "argocd" }}
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: {{ .type | default "git" }}
+  url: {{ .url }}
+  {{- if .username }}
+  username: {{ .username }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  {{- if .sshPrivateKey }}
+  sshPrivateKey: {{ .sshPrivateKey }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .name }}-repo
+  namespace: {{ $.Values.namespace | default "argocd" }}
+data:
+  url: {{ .url }}
+  type: {{ .type | default "git" }}
+{{- end }}
+

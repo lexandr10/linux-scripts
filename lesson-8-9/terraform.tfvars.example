@@ -1,0 +1,48 @@
+aws_region          = "us-east-1"
+name_prefix         = "lesson-8-9"
+s3_bucket_name      = "your-unique-terraform-state-bucket-name"
+dynamodb_table_name = "terraform-state-lock"
+ecr_repository_name = "django-app"
+cluster_name        = "lesson-8-9-cluster"
+
+vpc_cidr = "10.0.0.0/16"
+
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24"
+]
+
+private_subnet_cidrs = [
+  "10.0.10.0/24",
+  "10.0.20.0/24"
+]
+
+node_min_size     = 1
+node_max_size     = 3
+node_desired_size = 2
+
+instance_types = ["t3.medium"]
+capacity_type  = "ON_DEMAND"
+
+# Jenkins налаштування
+jenkins_namespace     = "jenkins"
+jenkins_release_name  = "jenkins"
+jenkins_chart_version = "5.1.7"
+
+# Argo CD налаштування
+argocd_namespace     = "argocd"
+argocd_release_name  = "argocd"
+argocd_chart_version = "7.2.0"
+
+# Git репозиторій для Helm charts
+git_repository_url  = "https://github.com/your-username/your-repo.git"
+git_repository_path = "charts/django-app"
+target_revision     = "main"
+destination_namespace = "default"
+
+tags = {
+  Project     = "lesson-8-9"
+  Environment = "development"
+  ManagedBy   = "terraform"
+}
+

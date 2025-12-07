@@ -1,0 +1,47 @@
+replicaCount: 2
+
+image:
+  repository: ""  # Буде оновлено Jenkins pipeline
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  enabled: true
+  type: LoadBalancer
+  port: 8000
+
+configMap:
+  env:
+    DJANGO_SETTINGS_MODULE: "myproject.settings"
+    PYTHONUNBUFFERED: "1"
+
+env: {}
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+livenessProbe:
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
