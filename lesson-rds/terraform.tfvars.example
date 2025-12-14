@@ -1,0 +1,56 @@
+aws_region          = "us-east-1"
+name_prefix         = "lesson-rds"
+s3_bucket_name      = "your-unique-terraform-state-bucket-name"
+dynamodb_table_name = "terraform-state-lock"
+
+vpc_cidr = "10.0.0.0/16"
+
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24"
+]
+
+private_subnet_cidrs = [
+  "10.0.10.0/24",
+  "10.0.20.0/24"
+]
+
+# RDS Configuration
+use_aurora = false  # Set to true for Aurora cluster
+
+rds_engine         = "postgres"  # or "mysql"
+rds_engine_version = "15.4"      # PostgreSQL 15.4 or MySQL version
+rds_instance_class = "db.t3.medium"
+
+rds_database_name   = "mydb"
+rds_master_username = "admin"
+rds_master_password = "ChangeMe123!"  # Use secrets manager in production
+
+# RDS-specific (ignored for Aurora)
+rds_allocated_storage    = 20
+rds_max_allocated_storage = 100
+rds_storage_type         = "gp3"
+
+# Aurora-specific
+aurora_reader_count = 0  # Number of read replicas
+
+# Common settings
+rds_multi_az            = false
+rds_publicly_accessible  = false
+rds_storage_encrypted    = true
+rds_backup_retention_period = 7
+rds_backup_window       = "03:00-04:00"
+rds_maintenance_window  = "mon:04:00-mon:05:00"
+rds_skip_final_snapshot = true
+
+# Parameter Group settings
+rds_parameter_max_connections = "100"
+rds_parameter_log_statement   = "all"
+rds_parameter_work_mem        = "4MB"
+
+tags = {
+  Project     = "lesson-rds"
+  Environment = "development"
+  ManagedBy   = "terraform"
+}
+
