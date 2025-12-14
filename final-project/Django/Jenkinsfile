@@ -1,0 +1,109 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command:
+    - sleep
+    args:
+    - 99d
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
+    env:
+    - name: DOCKER_CONFIG
+      value: /kaniko/.docker
+  - name: git
+    image: alpine/git:latest
+    command:
+    - sleep
+    args:
+    - 99d
+    volumeMounts:
+    - name: workspace
+      mountPath: /workspace
+  volumes:
+  - name: docker-config
+    secret:
+      secretName: docker-registry-secret
+  - name: workspace
+    emptyDir: {}
+"""
+        }
+    }
+    
+    environment {
+        AWS_REGION = 'us-east-1'
+        ECR_REGISTRY = "${env.ECR_REGISTRY}"
+        ECR_REPOSITORY = "${env.ECR_REPOSITORY}"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        GIT_REPO_URL = "${env.GIT_REPO_URL}"
+        HELM_CHART_PATH = "charts/django-app"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                container('git') {
+                    script {
+                        checkout scm
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                container('kaniko') {
+                    script {
+                        sh """
+                        /kaniko/executor \
+                            --context ${WORKSPACE}/Django \
+                            --dockerfile ${WORKSPACE}/Django/Dockerfile \
+                            --destination ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
+                            --destination ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
+                            --cache=true \
+                            --cache-ttl=24h
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Update Helm Chart') {
+            steps {
+                container('git') {
+                    script {
+                        sh """
+                        apk add --no-cache sed
+                        cd ${HELM_CHART_PATH}
+                        sed -i "s|repository:.*|repository: ${ECR_REGISTRY}/${ECR_REPOSITORY}|g" values.yaml
+                        sed -i "s|tag:.*|tag: ${IMAGE_TAG}|g" values.yaml
+                        
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@example.com"
+                        git add values.yaml
+                        git commit -m "Update image tag to ${IMAGE_TAG}" || exit 0
+                        git push origin main || exit 0
+                        """
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "Pipeline completed successfully. Image ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} pushed to ECR"
+        }
+        failure {
+            echo "Pipeline failed. Check logs for details."
+        }
+    }
+}
+

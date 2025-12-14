@@ -1,0 +1,25 @@
+namespace: argocd
+
+repositories: []
+
+applications:
+  - name: django-app
+    namespace: argocd
+    project: default
+    source:
+      repoURL: ""
+      targetRevision: main
+      path: charts/django-app
+      helm:
+        valueFiles:
+          - values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: default
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+
